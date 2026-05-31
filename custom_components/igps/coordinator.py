@@ -19,7 +19,7 @@ from igps_ble.const import (
 from igps_ble.models import IGPSDeviceState
 from igps_ble.parser import decode_device_string, parse_battery_level
 
-from .const import DEFAULT_MODEL, DOMAIN, UPDATE_INTERVAL
+from .const import DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,10 +31,10 @@ class IGPSCoordinator(DataUpdateCoordinator[IGPSDeviceState]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=f"{DOMAIN}-{address}",
             update_interval=UPDATE_INTERVAL,
         )
-        self._entry = entry
         self.address = address
 
     @property
@@ -74,7 +74,7 @@ class IGPSCoordinator(DataUpdateCoordinator[IGPSDeviceState]):
             name=service_info.name,
             rssi=service_info.rssi,
             battery_level=parse_battery_level(battery) if battery else None,
-            model=decode_device_string(model) if model else DEFAULT_MODEL,
+            model=decode_device_string(model) if model else None,
             firmware=decode_device_string(firmware) if firmware else None,
             manufacturer=decode_device_string(manufacturer) if manufacturer else None,
         )

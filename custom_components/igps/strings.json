@@ -3,24 +3,24 @@
     "flow_title": "{name}",
     "step": {
       "bluetooth_confirm": {
-        "description": "Configurar o {name}?"
+        "description": "Set up {name}?"
       },
       "user": {
-        "data": { "address": "Dispositivo" }
+        "data": { "address": "Device" }
       }
     },
     "abort": {
-      "no_devices_found": "Nenhum iGPSPORT encontrado por perto",
-      "already_configured": "Este dispositivo já está configurado"
+      "no_devices_found": "No iGPSPORT devices found nearby",
+      "already_configured": "This device is already configured"
     }
   },
   "entity": {
     "binary_sensor": {
-      "presence": { "name": "Presença" }
+      "presence": { "name": "Presence" }
     },
     "sensor": {
-      "rssi": { "name": "Sinal" },
-      "model": { "name": "Modelo" },
+      "rssi": { "name": "Signal" },
+      "model": { "name": "Model" },
       "firmware": { "name": "Firmware" }
     }
   }
