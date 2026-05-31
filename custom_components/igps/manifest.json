@@ -1,0 +1,17 @@
+{
+  "domain": "igps",
+  "name": "iGPSPORT iGS10S",
+  "bluetooth": [
+    { "local_name": "iGS10S*" },
+    { "local_name": "iGPSPORT*" }
+  ],
+  "codeowners": ["@hudsonbrendon"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://github.com/hudsonbrendon/ha-igps-ble",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/hudsonbrendon/ha-igps-ble/issues",
+  "requirements": ["python-igps-ble>=0.1.0", "bleak-retry-connector>=3.5.0"],
+  "version": "0.1.0"
+}
