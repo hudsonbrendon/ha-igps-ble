@@ -1,0 +1,8 @@
+Conectado: 72855D4F-E051-E8E7-BFDE-DA2AE5530A6A
+  subscrito notify -> 6e400003-b5a3-f393-e0a9-e50e24dcca9e
+  subscrito notify -> 6e400003-b5a3-f393-e0a9-e50e24dcca8e
+  subscrito notify -> 6e400003-b5a3-f393-e0a9-e50e24dcca7e
+  subscrito notify -> 6e400003-b5a3-f393-e0a9-e50e24dcca6e
+
+Escutando 25.0s (sem escrever nada)...
+Fim da escuta.
