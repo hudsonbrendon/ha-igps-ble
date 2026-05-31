@@ -12,3 +12,6 @@ bluetooth-data-tools
 bleak
 dbus-fast
 pyserial
+# Linux-only: HA's `usb` component (pulled in by the bluetooth stack) imports
+# pyudev on Linux. Needed so the CI test harness can set up bluetooth_adapters.
+pyudev; sys_platform == "linux"
