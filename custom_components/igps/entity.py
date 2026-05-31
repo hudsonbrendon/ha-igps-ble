@@ -28,4 +28,5 @@ class IGPSEntity(CoordinatorEntity[IGPSCoordinator]):
             model=(state.model if state else None) or DEFAULT_MODEL,
             name=(state.name if state else None) or DEFAULT_MODEL,
             sw_version=state.firmware if state else None,
+            hw_version=state.hardware if state else None,
         )

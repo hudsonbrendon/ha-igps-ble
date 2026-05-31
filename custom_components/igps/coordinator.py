@@ -13,8 +13,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from igps_ble.const import (
     BATTERY_LEVEL_UUID,
     FIRMWARE_REVISION_UUID,
+    HARDWARE_REVISION_UUID,
     MANUFACTURER_NAME_UUID,
     MODEL_NUMBER_UUID,
+    SOFTWARE_REVISION_UUID,
 )
 from igps_ble.models import IGPSDeviceState
 from igps_ble.parser import decode_device_string, parse_battery_level
@@ -64,7 +66,12 @@ class IGPSCoordinator(DataUpdateCoordinator[IGPSDeviceState]):
         try:
             battery = await _read(client, BATTERY_LEVEL_UUID)
             model = await _read(client, MODEL_NUMBER_UUID)
-            firmware = await _read(client, FIRMWARE_REVISION_UUID)
+            # iGS10S reporta firmware na Software Revision (0x2A28); fallback
+            # pra Firmware Revision (0x2A26) em aparelhos que usem a clássica.
+            firmware = await _read(client, SOFTWARE_REVISION_UUID)
+            if firmware is None:
+                firmware = await _read(client, FIRMWARE_REVISION_UUID)
+            hardware = await _read(client, HARDWARE_REVISION_UUID)
             manufacturer = await _read(client, MANUFACTURER_NAME_UUID)
         finally:
             await client.disconnect()
@@ -76,5 +83,6 @@ class IGPSCoordinator(DataUpdateCoordinator[IGPSDeviceState]):
             battery_level=parse_battery_level(battery) if battery else None,
             model=decode_device_string(model) if model else None,
             firmware=decode_device_string(firmware) if firmware else None,
+            hardware=decode_device_string(hardware) if hardware else None,
             manufacturer=decode_device_string(manufacturer) if manufacturer else None,
         )
