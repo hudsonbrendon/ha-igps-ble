@@ -35,9 +35,37 @@ Quatro instâncias de Nordic UART Service, UUID base `6e40000x-b5a3-f393-e0a9-e5
 - Sem handshake, o aparelho não emite nada (escuta passiva = 0 bytes).
 - Framing/handshake desconhecidos; sem docs públicas nem RE conhecido (busca em 2026-05).
 
-### Plano de RE
-1. Capturar tráfego app(iPhone)↔aparelho via **PacketLogger** + perfil de log Bluetooth da Apple.
-2. Salvar `.pklg` em `docs/captures/igps_sync.pklg`.
-3. Analisar com Wireshark/tshark: isolar writes em `…0002` e notifies em `…0003`, casar com os
-   valores que o app mostrou (bateria %, etc.) pra deduzir o framing.
-4. Só então estender `python-igps-ble` com o decoder do NUS.
+### Resultado da RE (captura PacketLogger iPhone, 2026-05-31)
+
+Captura: `docs/captures/igps_sync.pklg` (15.705 pacotes, 425 ATT). Extrações em
+`att_handles.txt`, `att_ops.txt`, `att_nus.txt`.
+
+**Mapa de handles (iGS10S, 4 instâncias NUS):**
+
+| Canal | Service UUID | RX (write) | TX (notify) | CCCD |
+|-------|--------------|-----------|-------------|------|
+| ch1 | `6e400001-…-…dcca9e` | `0x000d` | `0x000f` | `0x0010` |
+| ch2 | `6e400001-…-…dcca8e` | `0x0013` | `0x0015` | `0x0016` |
+| ch3 | `6e400001-…-…dcca7e` | `0x0019` | `0x001b` | `0x001c` |
+| ch4 | `6e400001-…-…dcca6e` | `0x001f` | `0x0021` | `0x0022` |
+
+**Dois formatos proprietários coexistem:**
+
+1. **TLV custom** (ch1/ch2): `01 <tipo> ffff <seq> ffff <len:be16> <payload> ffffffffffffffff <chk>`.
+   - app→ `0111ffff02ffff0004ad01…ae`  · device→ `0111ffff03ffff000e4101…b5`
+   - app→ `0106ffff01ffff00047f01…c4`  · device→ `0106ffff02ffff0027d201…d9`
+2. **Protobuf** (ch3): ex. device→ `08 06 10 02 1a0a 08 <varint> 10 <varint> 1a09 08 <varint> 10 <varint> …`
+   (mensagens com pares repetidos, aparência de séries temporais de atividade).
+
+**Handshake / autenticação (bloqueador):** no connect o app habilita notify nas 4 CCCDs e
+escreve no ch1 (`0x000d`) um bloco de config contendo um **token base64**
+`<token de pareamento — redigido>` (24 chars base64). O canal é **autenticado** — sem
+reproduzir esse login o aparelho não entrega dados.
+
+**Conclusão:** Em toda a captura o app **nunca fez um Read de characteristic** (`0x0a`) — não
+há byte de bateria exposto. Bateria/pedalada vivem dentro dos frames protobuf/TLV autenticados.
+Uma lib de terceiros precisaria replicar o token de login + reimplementar TLV e protobuf —
+RE pesado, frágil e provavelmente quebra a cada firmware. **Fora de escopo viável.**
+O `0x180F` (Battery Service) visto na captura é de **outro** aparelho BLE do iPhone, não do iGS10S.
+
+**Escopo final entregável por BLE:** presença, RSSI, manufacturer, hardware rev, firmware (sw rev).

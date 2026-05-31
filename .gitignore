@@ -5,3 +5,6 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 docs/captures/btsnoop_hci.log
+docs/captures/*.pklg
+docs/captures/att_*.txt
+docs/captures/brand_report.txt
