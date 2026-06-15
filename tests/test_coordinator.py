@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 from homeassistant.core import HomeAssistant
 from igps_ble.models import IGPSDeviceState
 
+from custom_components.igps.binary_sensor import IGPSPresenceSensor
 from custom_components.igps.coordinator import IGPSCoordinator
 from custom_components.igps.entity import IGPSEntity
 
@@ -50,3 +51,23 @@ def test_entity_available_tracks_coordinator_data(hass: HomeAssistant):
 
     coordinator.data = None
     assert entity.available is False
+
+
+def test_presence_sensor_disconnected_offline_with_cached_data(hass: HomeAssistant):
+    """A presença reporta desconectado quando não há advertisement recente,
+
+    mesmo havendo dados em cache: é o sinal honesto de conectividade.
+    """
+    entry = MagicMock()
+    coordinator = IGPSCoordinator(hass, entry, ADDRESS)
+    coordinator.data = _make_state()
+    sensor = IGPSPresenceSensor(coordinator)
+
+    with patch(
+        "custom_components.igps.binary_sensor.bluetooth.async_last_service_info",
+        return_value=None,
+    ):
+        # Disponível mesmo offline (reporta "Disconnected", não "unavailable")...
+        assert sensor.available is True
+        # ...e desligado, porque não há advertisement recente do aparelho.
+        assert sensor.is_on is False
