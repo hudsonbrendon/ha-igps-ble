@@ -19,6 +19,10 @@ class IGPSEntity(CoordinatorEntity[IGPSCoordinator]):
         self._attr_unique_id = f"{coordinator.address}_{key}"
 
     @property
+    def available(self) -> bool:
+        return self.coordinator.data is not None
+
+    @property
     def device_info(self) -> DeviceInfo:
         state = self.coordinator.data
         return DeviceInfo(

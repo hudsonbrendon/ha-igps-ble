@@ -48,6 +48,8 @@ class IGPSCoordinator(DataUpdateCoordinator[IGPSDeviceState]):
     async def _async_update_data(self) -> IGPSDeviceState:
         service_info = self._service_info
         if service_info is None:
+            if self.data is not None:
+                return self.data
             raise UpdateFailed(f"iGS10S {self.address} fora de alcance")
 
         ble_device = service_info.device

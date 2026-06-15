@@ -5,6 +5,7 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import IGPSCoordinator
@@ -17,7 +18,10 @@ type IGPSConfigEntry = ConfigEntry[IGPSCoordinator]
 async def async_setup_entry(hass: HomeAssistant, entry: IGPSConfigEntry) -> bool:
     address = entry.data["address"]
     coordinator = IGPSCoordinator(hass, entry, address)
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        pass
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

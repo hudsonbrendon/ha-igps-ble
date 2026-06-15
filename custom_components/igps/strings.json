@@ -16,7 +16,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "presence": { "name": "Presence" }
+      "presence": { "name": "Presence" },
+      "connectivity": { "name": "Connectivity" }
     },
     "sensor": {
       "rssi": { "name": "Signal" },
