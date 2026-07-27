@@ -30,6 +30,11 @@ class IGPSPresenceSensor(IGPSEntity, BinarySensorEntity):
         super().__init__(coordinator, "presence")
 
     @property
+    def available(self) -> bool:
+        """Disponível mesmo offline: ele justamente reporta a presença."""
+        return True
+
+    @property
     def is_on(self) -> bool:
         """True se o HA tem um advertisement recente e conectável do aparelho."""
         return (
