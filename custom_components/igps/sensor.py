@@ -6,8 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -74,15 +74,21 @@ async def async_setup_entry(
     async_add_entities(IGPSSensor(coordinator, desc) for desc in SENSORS)
 
 
-class IGPSSensor(IGPSEntity, SensorEntity):
+class IGPSSensor(IGPSEntity, RestoreSensor):
     entity_description: IGPSSensorDescription
 
     def __init__(self, coordinator, description: IGPSSensorDescription) -> None:
         super().__init__(coordinator, description.key)
         self.entity_description = description
+        self._restored_value: int | str | None = None
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if (last_data := await self.async_get_last_sensor_data()) is not None:
+            self._restored_value = last_data.native_value
 
     @property
     def native_value(self) -> int | str | None:
-        if self.coordinator.data is None:
-            return None
-        return self.entity_description.value_fn(self.coordinator.data)
+        if self.coordinator.data is not None:
+            return self.entity_description.value_fn(self.coordinator.data)
+        return self._restored_value
