@@ -15,7 +15,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Auto-discovers an **iGPSPORT iGS10S** cycling computer over Bluetooth LE and
-exposes its presence, signal strength, and device information in Home Assistant.
+exposes its battery, internal sensors, ride status, stored activities and last GPS
+position in Home Assistant — and lets you set the rider/bike profile on the device.
 
 The Bluetooth protocol and device control live in a separate Python library,
 [**`python-igps-ble`**](https://github.com/hudsonbrendon/python-igps-ble)
@@ -31,8 +32,16 @@ in automatically via `manifest.json` `requirements`.
 - 📶 **Signal strength** — an RSSI `sensor` (diagnostic).
 - 🏷️ **Device info** — model, hardware revision, and firmware `sensor`s, also
   shown on the device page in the device registry.
-- 🔋 **Battery** — a battery `sensor` that populates when the device exposes the
-  standard Battery Service (the iGS10S does not — see **Scope**).
+- 🔋 **Battery** — level (%) and voltage, read over iGPSPORT's proprietary
+  protocol (the iGS10S has no standard Battery Service).
+- 🌡️ **Internal sensors** — temperature, free memory and the device clock.
+- 🚴 **Ride status** — idle / recording / paused; while recording (e.g. on an
+  indoor trainer) it polls every 30 s and exposes the live ride data as attributes.
+- 🗂️ **Stored activities** — how many rides are on the device and when the last one
+  started.
+- 📍 **Last GPS position** — a `device_tracker` with the last fix the device got.
+- ⚙️ **Rider & bike profile** — weight, height, age, sex, wheel circumference and
+  bike weight, written to the device (the time zone is taken from Home Assistant).
 - 🛰️ **Works through ESPHome Bluetooth proxies** — it uses Home Assistant's shared
   Bluetooth stack, so the device doesn't need to be near the HA host, only near a
   proxy.
@@ -85,22 +94,47 @@ in automatically via `manifest.json` `requirements`.
 
 | Entity | Description |
 |--------|-------------|
-| `sensor.<name>_battery` | Battery level (%), when the device exposes a Battery Service. |
+| `sensor.<name>_battery` | Battery level (%). |
+| `sensor.<name>_battery_voltage` | Battery voltage (V). Diagnostic. |
+| `sensor.<name>_temperature` | Internal temperature sensor (°C). |
+| `sensor.<name>_free_memory` | Free storage (%). Diagnostic. |
+| `sensor.<name>_ride_status` | `idle` / `recording` / `paused`. Attributes: raw live ride fields (`speed`, `distance`, `cadence`, `heart_rate`, `power`, `altitude`, …) and `start`. |
+| `sensor.<name>_stored_activities` | Number of rides stored on the device; attribute `activities` lists start time and `.fit` size. |
+| `sensor.<name>_last_activity` | Start time of the most recent stored ride. |
+| `sensor.<name>_device_clock` | The device's clock. Diagnostic, disabled by default. |
+| `sensor.<name>_protocol_version` | Protocol version. Diagnostic, disabled by default. |
 | `sensor.<name>_rssi` | Bluetooth signal strength (dBm). Diagnostic, disabled by default. |
-| `sensor.<name>_model` | Model number. Diagnostic, disabled by default. |
-| `sensor.<name>_firmware` | Firmware (software revision). Diagnostic, disabled by default. |
+| `sensor.<name>_model` / `_firmware` | Model and firmware. Diagnostic, disabled by default. |
 
-Manufacturer, hardware revision, and firmware are also shown on the device page in
-the device registry.
+Serial number, hardware revision and firmware are also on the device page.
+
+### Device tracker
+
+| Entity | Description |
+|--------|-------------|
+| `device_tracker.<name>_last_gps_position` | Last GPS fix stored by the device. |
+
+### Configuration (number / select)
+
+| Entity | Description |
+|--------|-------------|
+| `number.<name>_rider_weight` / `_rider_height` / `_rider_age` | Rider profile (calories). |
+| `number.<name>_wheel_circumference` | Wheel circumference in mm (speed from a wheel sensor). |
+| `number.<name>_bike_weight` | Bike weight (kg). |
+| `select.<name>_rider_sex` | Male / female. |
+
+The device accepts the profile but never reports it back, so these entities show
+the last values Home Assistant wrote (`assumed_state`). Every write sends the whole
+profile plus Home Assistant's UTC offset, which sets the device clock's time zone.
 
 ## Scope
 
-The iGS10S does **not** expose battery level, speed, distance, or ride data to
-third parties over Bluetooth — that telemetry lives behind an authenticated,
-proprietary Nordic UART protocol used by the official iGPSPORT app, which is out
-of scope for this integration (see [`docs/PROTOCOL.md`](docs/PROTOCOL.md) for the
-reverse-engineering notes). This integration covers what is read reliably over
-standard BLE: presence, signal strength, and device information.
+Everything above was reverse engineered from the official iGPSPORT Ride Android
+app and validated on a real iGS10S — see [`docs/PROTOCOL.md`](docs/PROTOCOL.md).
+Not exposed: downloading `.fit` files, deleting activities, factory commands
+(format/reset) and display settings (`CONFIG` is answered with *unsupported* by the
+iGS10S firmware). Time sync is not available either — the clock comes from GPS.
+The live ride attributes are raw protocol values; their units are not confirmed.
 
 ## Credits
 

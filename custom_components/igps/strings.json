@@ -6,7 +6,9 @@
         "description": "Set up {name}?"
       },
       "user": {
-        "data": { "address": "Device" }
+        "data": {
+          "address": "Device"
+        }
       }
     },
     "abort": {
@@ -16,12 +18,77 @@
   },
   "entity": {
     "binary_sensor": {
-      "presence": { "name": "Presence" }
+      "presence": {
+        "name": "Presence"
+      }
     },
     "sensor": {
-      "rssi": { "name": "Signal" },
-      "model": { "name": "Model" },
-      "firmware": { "name": "Firmware" }
+      "rssi": {
+        "name": "Signal"
+      },
+      "model": {
+        "name": "Model"
+      },
+      "firmware": {
+        "name": "Firmware"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "memory_free": {
+        "name": "Free memory"
+      },
+      "cycling_status": {
+        "name": "Ride status",
+        "state": {
+          "idle": "Idle",
+          "recording": "Recording",
+          "paused": "Paused"
+        }
+      },
+      "activities": {
+        "name": "Stored activities"
+      },
+      "last_activity": {
+        "name": "Last activity"
+      },
+      "device_time": {
+        "name": "Device clock"
+      },
+      "protocol_version": {
+        "name": "Protocol version"
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "name": "Last GPS position"
+      }
+    },
+    "number": {
+      "weight": {
+        "name": "Rider weight"
+      },
+      "height": {
+        "name": "Rider height"
+      },
+      "age": {
+        "name": "Rider age"
+      },
+      "wheel": {
+        "name": "Wheel circumference"
+      },
+      "bike_weight": {
+        "name": "Bike weight"
+      }
+    },
+    "select": {
+      "sex": {
+        "name": "Rider sex",
+        "state": {
+          "male": "Male",
+          "female": "Female"
+        }
+      }
     }
   }
 }

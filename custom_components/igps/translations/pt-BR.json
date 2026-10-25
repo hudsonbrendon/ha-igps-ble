@@ -6,7 +6,9 @@
         "description": "Configurar o {name}?"
       },
       "user": {
-        "data": { "address": "Dispositivo" }
+        "data": {
+          "address": "Dispositivo"
+        }
       }
     },
     "abort": {
@@ -16,12 +18,77 @@
   },
   "entity": {
     "binary_sensor": {
-      "presence": { "name": "Presença" }
+      "presence": {
+        "name": "Presença"
+      }
     },
     "sensor": {
-      "rssi": { "name": "Sinal" },
-      "model": { "name": "Modelo" },
-      "firmware": { "name": "Firmware" }
+      "rssi": {
+        "name": "Sinal"
+      },
+      "model": {
+        "name": "Modelo"
+      },
+      "firmware": {
+        "name": "Firmware"
+      },
+      "battery_voltage": {
+        "name": "Tensão da bateria"
+      },
+      "memory_free": {
+        "name": "Memória livre"
+      },
+      "cycling_status": {
+        "name": "Status do pedal",
+        "state": {
+          "idle": "Parado",
+          "recording": "Gravando",
+          "paused": "Pausado"
+        }
+      },
+      "activities": {
+        "name": "Atividades salvas"
+      },
+      "last_activity": {
+        "name": "Última atividade"
+      },
+      "device_time": {
+        "name": "Relógio do aparelho"
+      },
+      "protocol_version": {
+        "name": "Versão do protocolo"
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "name": "Última posição GPS"
+      }
+    },
+    "number": {
+      "weight": {
+        "name": "Peso do ciclista"
+      },
+      "height": {
+        "name": "Altura do ciclista"
+      },
+      "age": {
+        "name": "Idade do ciclista"
+      },
+      "wheel": {
+        "name": "Circunferência da roda"
+      },
+      "bike_weight": {
+        "name": "Peso da bike"
+      }
+    },
+    "select": {
+      "sex": {
+        "name": "Sexo do ciclista",
+        "state": {
+          "male": "Masculino",
+          "female": "Feminino"
+        }
+      }
     }
   }
 }

@@ -36,9 +36,9 @@ class IGPSEntity(RestoreEntity, CoordinatorEntity[IGPSCoordinator]):
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
-        self._restored_available = (
-            last_state is not None
-            and last_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+        self._restored_available = last_state is not None and last_state.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
         )
 
     @property
@@ -56,4 +56,5 @@ class IGPSEntity(RestoreEntity, CoordinatorEntity[IGPSCoordinator]):
             name=(state.name if state else None) or DEFAULT_MODEL,
             sw_version=state.firmware if state else None,
             hw_version=state.hardware if state else None,
+            serial_number=state.serial if state else None,
         )

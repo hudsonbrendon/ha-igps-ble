@@ -61,3 +61,10 @@ Dump completo em `docs/captures/gatt_dump.txt`. Leitura confirmada char a char:
 - `local_name` prefix para casar no manifest: `iGS10S` (+ `iGPSPORT*`).
 - Entidades garantidas hoje: presença (advert), RSSI, manufacturer, hardware rev, firmware (sw rev).
 - Bateria/pedalada: dependem do resultado da RE do NUS.
+
+## Atualização 2026-10-25 — protocolo quebrado
+
+A conclusão acima ("canal autenticado, fora de escopo") estava errada. O APK do
+iGPSPORT Ride mostrou o enquadramento (header de 20 B no ch2 + protobuf no ch1/ch3,
+CRC-8/MAXIM) e o "token" é só o `member_id` do perfil. Bateria, sensores internos,
+status de pedal, GPS, atividades e perfil funcionam. Ver `PROTOCOL.md`.

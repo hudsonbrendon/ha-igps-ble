@@ -2,26 +2,21 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from dataclasses import asdict, replace
 
-from bleak_retry_connector import establish_connection, BleakClientWithServiceCache
+from bleak_retry_connector import BleakClientWithServiceCache, establish_connection
 from habluetooth import BluetoothServiceInfoBleak
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from igps_ble.const import (
-    BATTERY_LEVEL_UUID,
-    FIRMWARE_REVISION_UUID,
-    HARDWARE_REVISION_UUID,
-    MANUFACTURER_NAME_UUID,
-    MODEL_NUMBER_UUID,
-    SOFTWARE_REVISION_UUID,
-)
-from igps_ble.models import IGPSDeviceState
-from igps_ble.parser import decode_device_string, parse_battery_level
+from homeassistant.util import dt as dt_util
+from igps_ble import IGPSDeviceState, IGPSSession, UserProfile, read_state, set_profile
 
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import DOMAIN, RIDING_UPDATE_INTERVAL, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,12 +33,19 @@ class IGPSCoordinator(DataUpdateCoordinator[IGPSDeviceState]):
             update_interval=UPDATE_INTERVAL,
         )
         self.address = address
+        # Uma conexão por vez: poll e escrita de perfil disputam o mesmo rádio.
+        self._lock = asyncio.Lock()
 
     @property
     def _service_info(self) -> BluetoothServiceInfoBleak | None:
         return bluetooth.async_last_service_info(
             self.hass, self.address, connectable=True
         )
+
+    @property
+    def profile(self) -> UserProfile:
+        """Perfil gravado pelo HA (o aparelho não devolve o perfil no GET)."""
+        return UserProfile(**self.config_entry.options.get("profile", {}))
 
     async def _async_update_data(self) -> IGPSDeviceState:
         service_info = self._service_info
@@ -52,39 +54,57 @@ class IGPSCoordinator(DataUpdateCoordinator[IGPSDeviceState]):
                 return self.data
             raise UpdateFailed(f"iGS10S {self.address} fora de alcance")
 
-        ble_device = service_info.device
-
-        async def _read(client, uuid):
-            if client.services.get_characteristic(uuid) is None:
-                return None
+        async with self._lock:
+            client = await establish_connection(
+                BleakClientWithServiceCache, service_info.device, self.address
+            )
             try:
-                return await client.read_gatt_char(uuid)
-            except Exception:  # noqa: BLE001
-                return None
+                state = await read_state(
+                    client, self.address, service_info.name, service_info.rssi
+                )
+            finally:
+                await client.disconnect()
 
-        client = await establish_connection(
-            BleakClientWithServiceCache, ble_device, self.address
+        # Pedalando (ex.: rolo em casa): poll rápido para os dados ao vivo.
+        self.update_interval = (
+            RIDING_UPDATE_INTERVAL
+            if state.cycling_status in ("recording", "paused")
+            else UPDATE_INTERVAL
         )
-        try:
-            battery = await _read(client, BATTERY_LEVEL_UUID)
-            model = await _read(client, MODEL_NUMBER_UUID)
-            # iGS10S reporta firmware na Software Revision (0x2A28); fallback
-            # pra Firmware Revision (0x2A26) em aparelhos que usem a clássica.
-            firmware = await _read(client, SOFTWARE_REVISION_UUID)
-            if firmware is None:
-                firmware = await _read(client, FIRMWARE_REVISION_UUID)
-            hardware = await _read(client, HARDWARE_REVISION_UUID)
-            manufacturer = await _read(client, MANUFACTURER_NAME_UUID)
-        finally:
-            await client.disconnect()
+        return state
 
-        return IGPSDeviceState(
-            address=self.address,
-            name=service_info.name,
-            rssi=service_info.rssi,
-            battery_level=parse_battery_level(battery) if battery else None,
-            model=decode_device_string(model) if model else None,
-            firmware=decode_device_string(firmware) if firmware else None,
-            hardware=decode_device_string(hardware) if hardware else None,
-            manufacturer=decode_device_string(manufacturer) if manufacturer else None,
+    async def async_set_profile(self, **changes) -> None:
+        """Grava o perfil inteiro no aparelho e guarda nas options da entrada."""
+        service_info = self._service_info
+        if service_info is None:
+            raise HomeAssistantError("iGS10S fora de alcance")
+        offset = dt_util.now().utcoffset()
+        profile = replace(
+            self.profile,
+            **changes,
+            time_zone_s=int(offset.total_seconds()) if offset else 0,
         )
+        async with self._lock:
+            # Sinal fraco derruba a conexão às vezes: uma segunda tentativa basta.
+            for attempt in range(2):
+                try:
+                    client = await establish_connection(
+                        BleakClientWithServiceCache, service_info.device, self.address
+                    )
+                    try:
+                        session = IGPSSession(client)
+                        await session.start()
+                        await set_profile(session, profile)
+                    finally:
+                        await client.disconnect()
+                    break
+                except Exception as err:
+                    if attempt:
+                        raise HomeAssistantError(
+                            f"Falha ao gravar perfil: {err}"
+                        ) from err
+        self.hass.config_entries.async_update_entry(
+            self.config_entry,
+            options={**self.config_entry.options, "profile": asdict(profile)},
+        )
+        self.async_update_listeners()

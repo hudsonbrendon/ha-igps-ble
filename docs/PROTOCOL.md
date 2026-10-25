@@ -1,71 +1,108 @@
-# iGPSPORT iGS10S — Protocolo BLE (escopo de terceiros)
+# iGPSPORT iGS10S — Protocolo BLE
 
-> Verificado empiricamente em 2026-05-31 (macOS/bleak). Ver `RECON_FINDINGS.md` e
-> `docs/captures/` para os valores crus.
+> RE de 2026-10-25: APK **iGPSPORT Ride** `com.qiwu.worldwide.ride` 8.06.46
+> (pacote Java `com.igpsport.blelib`, decompilado com jadx) + validação ao vivo num
+> iGS10S (firmware V1.15, protocolo 1.01). Implementação de referência:
+> [`python-igps-ble`](https://github.com/hudsonbrendon/python-igps-ble)
+> (`igps_ble/protocol.py`, `igps_ble/client.py`).
+>
+> **Correção do recon de 2026-05-31:** o canal *não* é autenticado. O "token base64"
+> visto na captura é o `member_id` (id do usuário na nuvem) dentro do perfil que o
+> app grava — não um login. Qualquer cliente BLE fala o protocolo.
 
-## Em escopo (lido por terceiros sem app oficial)
+## Device Information Service (SIG) — `0x180A`
 
-### Device Information Service — `0000180a-0000-1000-8000-00805f9b34fb`  [confirmado: ✅]
-- Manufacturer Name — `00002a29-…` — string UTF-8. Valor real: `iGPSPORT`.
-- Hardware Revision — `00002a27-…` — string UTF-8. Valor real: `V1.00`.
-- **Software Revision — `00002a28-…`** — string UTF-8. Valor real: `V1.15`. **(= firmware)**
-- ❌ Model Number `00002a24`, Serial `00002a25` e Firmware Revision `00002a26` **não existem** neste aparelho.
+Manufacturer `0x2A29` = `iGPSPORT`, Hardware `0x2A27` = `V1.00`,
+**Software `0x2A28` = firmware** (`V1.15`). Não há `0x180F` (bateria), `0x2A24`,
+`0x2A25` nem `0x2A26`.
 
-### Presença
-- Derivada do advertisement BLE (`local_name` = `iGS10S`). O HA trata "visto recentemente"
-  como presente. O advert também expõe o serviço `0x180A`.
+## Canais (4× Nordic UART)
 
-### Bateria — ❌ NÃO disponível por SIG
-- O iGS10S **não** expõe Battery Service `0x180F` nem Battery Level `0x2A19`.
-- A % de bateria, se obtível, está no canal proprietário Nordic UART (ver abaixo) — em RE.
+UUID base `6e40000X-b5a3-f393-e0a9-e50e24dccaYe`; RX = `…0002` (write), TX = `…0003`
+(notify).
 
-## Canal proprietário (Nordic UART) — RE em andamento
+| Canal | `Ye` | Uso |
+|-------|------|-----|
+| ch1 | `9e` | payload protobuf da maioria dos serviços |
+| ch2 | `8e` | **controle**: headers de 20 B e ACKs |
+| ch3 | `7e` | payload de CYCLING_DATA (lista/arquivos de atividade) |
+| ch4 | `6e` | gen 4 (não usado pelo iGS10S) |
 
-Quatro instâncias de Nordic UART Service, UUID base `6e40000x-b5a3-f393-e0a9-e50e24dccaYe`:
+O app classifica o iGS10S como **geração 3** (`DeviceInfoHelper`): payload no canal de
+dados, header no ch2. (Gen 4 concatena header+payload num canal só.)
 
-| Instância | Service | RX (write) | TX (notify) |
-|-----------|---------|------------|-------------|
-| 1 | `6e400001-…cca9e` | `6e400002-…cca9e` | `6e400003-…cca9e` |
-| 2 | `6e400001-…cca8e` | `6e400002-…cca8e` | `6e400003-…cca8e` |
-| 3 | `6e400001-…cca7e` | `6e400002-…cca7e` | `6e400003-…cca7e` |
-| 4 | `6e400001-…cca6e` | `6e400002-…cca6e` | `6e400003-…cca6e` |
+## Enquadramento
 
-- App escreve comandos em RX (`…0002`), aparelho responde em TX (`…0003`).
-- Múltiplas instâncias provavelmente multiplexam funções (sync de atividade, config, live data).
-- Sem handshake, o aparelho não emite nada (escuta passiva = 0 bytes).
-- Framing/handshake desconhecidos; sem docs públicas nem RE conhecido (busca em 2026-05).
+Requisição: escreve o protobuf no RX de dados **em pacotes de 20 B** (o firmware
+descarta o que passar de 20 B por write — o app fatia com `DataSplitter`; no macOS o
+MTU maior faz o bleak mandar tudo junto e o aparelho responde `DataError`), depois o
+header no ch2 RX:
 
-### Resultado da RE (captura PacketLogger iPhone, 2026-05-31)
+```
+[0]  01            header (02 = ACK)
+[1]  service       Common.service_type_index
+[2]  sub-service   ff = nenhum (CONFIG/BACK usam o subtipo)
+[3]  ff
+[4]  operação      enum OPERATE_TYPE do serviço
+[5]  ff   [6] ff
+[7:9] len(payload) big-endian
+[9]  crc8(payload)
+[10] 01            end type = protobuf
+[11:19] ff × 8
+[19] crc8(header[0:19])
+```
 
-Captura: `docs/captures/igps_sync.pklg` (15.705 pacotes, 425 ATT). Extrações em
-`att_handles.txt`, `att_ops.txt`, `att_nus.txt`.
+CRC = **CRC-8/MAXIM** (poly refletido 0x31 → 0x8C, init 0). Confere com a captura do
+app: `08111002` → `0111ffff02ffff0004ad01ffffffffffffffffae`.
 
-**Mapa de handles (iGS10S, 4 instâncias NUS):**
+Resposta: notificações de payload no TX do mesmo canal e, por último, um header no
+ch2 TX (op = `SEND`/`GET`). Comandos de escrita respondem com **ACK**
+`02 svc sub ff op ff ff STATUS ff… crc`. `STATUS` (`DeviceReturnStatus`): 0 ok,
+1 DataError, 2 MemoryError, 3 LowBattery, 5 IsBeingUsed, **6 UnsupportedCommand**,
+33 DeviceIsSportRecording…
 
-| Canal | Service UUID | RX (write) | TX (notify) | CCCD |
-|-------|--------------|-----------|-------------|------|
-| ch1 | `6e400001-…-…dcca9e` | `0x000d` | `0x000f` | `0x0010` |
-| ch2 | `6e400001-…-…dcca8e` | `0x0013` | `0x0015` | `0x0016` |
-| ch3 | `6e400001-…-…dcca7e` | `0x0019` | `0x001b` | `0x001c` |
-| ch4 | `6e400001-…-…dcca6e` | `0x001f` | `0x0021` | `0x0022` |
+Todo payload começa com `1: service_type, 2: operação` (exceto CONFIG e BACK, que usam
+`2: subtipo, 3: operação`).
 
-**Dois formatos proprietários coexistem:**
+## Serviços que o iGS10S responde
 
-1. **TLV custom** (ch1/ch2): `01 <tipo> ffff <seq> ffff <len:be16> <payload> ffffffffffffffff <chk>`.
-   - app→ `0111ffff02ffff0004ad01…ae`  · device→ `0111ffff03ffff000e4101…b5`
-   - app→ `0106ffff01ffff00047f01…c4`  · device→ `0106ffff02ffff0027d201…d9`
-2. **Protobuf** (ch3): ex. device→ `08 06 10 02 1a0a 08 <varint> 10 <varint> 1a09 08 <varint> 10 <varint> …`
-   (mensagens com pares repetidos, aparência de séries temporais de atividade).
+| Svc | Nome | Op | Ch | Resposta / efeito |
+|-----|------|----|----|-------------------|
+| 11 | FACTORY | 6 BATTARY_GET | 1 | `6: {1: tensão mV, 2: %}` → ex. 3718 mV, 51 % |
+| 11 | FACTORY | 1 SN_GET | 1 | `3: {1: "799…"}` serial |
+| 11 | FACTORY | 5 MEMORY_GET | 1 | `5: {1: total, 2: livre}` (8112 / 8064) |
+| 11 | FACTORY | 4 SENSOR_GET | 1 | `4: [{1: tipo, 2: valor, 3: status}]`: 1 GPS, 2 RTC (segundos FIT, hora **local**), 3 AIR (bruto, unidade desconhecida), 4 TEM (décimos de °C), 5 ACC |
+| 11 | FACTORY | 254 ALL_GET | 1 | dump de teste de fábrica (SNR GNSS, ANT…) |
+| 17 | DEV_VER_INFO | 2 GET | 1 | `3: {3: ble_boot, 4: ble_app, 5: hw, 6: protocolo}` (×100) |
+| 13 | DEV_STATUS | 1 GET | 1 | `3: {1: 0 livre/1 gravando/2 pausa, 2: início}`, `4: {1,2: lat/lon double}`, `5: rt_data_message` (só gravando) |
+| 6 | CYCLING_DATA | 1 LIST_GET | **3** | `3: [{1: início (FIT local), 2: bytes}]` |
+| 9 | USER_CONFIG | 1 SET | 1 | `3: {1 sexo (1 masc/0 fem), 2 peso×10, 3 idade, 4 altura cm, 5 roda mm, 6 peso bike×10, 7 fuso s}` → ACK 0 |
+| 9 | USER_CONFIG | 2 GET | 1 | sempre zeros (não reflete o SET) |
+| 10 | BLE | 1 BOND_INFO | 1 | `3: {1: status}` |
 
-**Handshake / autenticação (bloqueador):** no connect o app habilita notify nas 4 CCCDs e
-escreve no ch1 (`0x000d`) um bloco de config contendo um **token base64**
-`<token de pareamento — redigido>` (24 chars base64). O canal é **autenticado** — sem
-reproduzir esse login o aparelho não entrega dados.
+Verificado: o SET de USER_CONFIG aplica — omitir o campo 7 deixou o relógio em UTC;
+mandar `7: -10800` voltou para a hora local. Campo ausente = 0, então grave sempre o
+perfil inteiro.
 
-**Conclusão:** Em toda a captura o app **nunca fez um Read de characteristic** (`0x0a`) — não
-há byte de bateria exposto. Bateria/pedalada vivem dentro dos frames protobuf/TLV autenticados.
-Uma lib de terceiros precisaria replicar o token de login + reimplementar TLV e protobuf —
-RE pesado, frágil e provavelmente quebra a cada firmware. **Fora de escopo viável.**
-O `0x180F` (Battery Service) visto na captura é de **outro** aparelho BLE do iPhone, não do iGS10S.
+`rt_data_message` (DEV_STATUS campo 5): 1 velocidade, 2 vel. média, 3 tempo, 4
+distância, 5 cadência, 6 FC, 7 FC média, 8 potência, 9 subida total, 10 subida média,
+11 altitude, 12 inclinação, 13 vel. máx, 14 FC máx, 15 cad. média, 16 cad. máx,
+17 pot. média, 18 pot. máx, 19 rumo. Escalas não confirmadas (o app não usa esse
+campo; precisa de uma pedalada para validar).
 
-**Escopo final entregável por BLE:** presença, RSSI, manufacturer, hardware rev, firmware (sw rev).
+Epoch FIT = 1989-12-31 00:00; o aparelho guarda horário local nessa base.
+
+## Respondidos com UnsupportedCommand (6) ou sem efeito
+
+- CONFIG (12) — páginas, bike, unidades, idioma, backlight, som, alarmes, auto-pause:
+  status 6 para todo subtipo (inclusive o SET que o app manda).
+- SENSOR (14), LANGUAGE (18).
+- BACK/TIME (3/6, `timeCalibration`): status 6. FACTORY RTC_SET (12) dá ACK 0 mas o
+  relógio não muda — a hora vem do GPS + fuso do perfil.
+
+## Não implementado de propósito
+
+- Download de `.fit` (CYCLING_DATA FILE_GET) — dá para fazer, fica para depois.
+- CYCLING_DATA FILE_DEL/ALL_DEL, FACTORY CONTROL (format, factory reset), SN_SET:
+  destrutivos.
+- BACK (clima, pressão, efemérides AGPS) — telas que o iGS10S (LCD segmentado) não tem.

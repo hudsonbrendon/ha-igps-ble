@@ -9,7 +9,13 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import IGPSCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 
 type IGPSConfigEntry = ConfigEntry[IGPSCoordinator]
 
