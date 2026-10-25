@@ -141,7 +141,7 @@
   "services": {
     "download_activity": {
       "name": "Download activity",
-      "description": ".fit files are saved under media/igps/<serial>/. Without start, downloads all.",
+      "description": ".fit files are saved under media/igps/(serial)/. Without start, downloads all.",
       "fields": {
         "config_entry_id": {
           "name": "Device",
@@ -402,9 +402,9 @@
         "pedestrian": "Pedestrian",
         "automotive": "Automotive",
         "sea": "Sea",
-        "airborne_1g": "Airborne <1g",
-        "airborne_2g": "Airborne <2g",
-        "airborne_4g": "Airborne <4g",
+        "airborne_1g": "Airborne 1g",
+        "airborne_2g": "Airborne 2g",
+        "airborne_4g": "Airborne 4g",
         "wrist": "Wrist",
         "bike": "Bike"
       }

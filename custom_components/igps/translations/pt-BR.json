@@ -141,7 +141,7 @@
   "services": {
     "download_activity": {
       "name": "Baixar atividade",
-      "description": "Os .fit vão para media/igps/<serial>/. Sem início, baixa todas.",
+      "description": "Os .fit vão para media/igps/(serial)/. Sem início, baixa todas.",
       "fields": {
         "config_entry_id": {
           "name": "Aparelho",
@@ -402,9 +402,9 @@
         "pedestrian": "Pedestre",
         "automotive": "Automotivo",
         "sea": "Mar",
-        "airborne_1g": "Aéreo <1g",
-        "airborne_2g": "Aéreo <2g",
-        "airborne_4g": "Aéreo <4g",
+        "airborne_1g": "Aéreo 1g",
+        "airborne_2g": "Aéreo 2g",
+        "airborne_4g": "Aéreo 4g",
         "wrist": "Pulso",
         "bike": "Bike"
       }
