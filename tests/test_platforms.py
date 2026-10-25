@@ -69,7 +69,7 @@ async def test_entities_and_profile_write(hass: HomeAssistant, tmp_path):
         session.return_value.start = AsyncMock()
         session.return_value.simple = AsyncMock(return_value={})
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         states = {s.entity_id: s for s in hass.states.async_all()}
         by_suffix = {

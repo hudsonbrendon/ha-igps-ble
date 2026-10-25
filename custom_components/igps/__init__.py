@@ -34,9 +34,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: IGPSConfigEntry) -> bool:
     address = entry.data["address"]
     coordinator = IGPSCoordinator(hass, entry, address)
-    await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # A primeira leitura pelo proxy BLE pode levar mais de um minuto: roda em
+    # segundo plano para não travar o boot (as entidades restauram o último estado).
+    entry.async_create_background_task(
+        hass, coordinator.async_refresh(), "igps_first_refresh"
+    )
     return True
 
 

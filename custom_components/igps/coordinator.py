@@ -129,6 +129,17 @@ class IGPSCoordinator(DataUpdateCoordinator[IGPSDeviceState]):
             finally:
                 await client.disconnect()
 
+        if self.data is not None:
+            # Consulta que estourou o tempo neste poll: mantém o último valor.
+            state = replace(
+                state,
+                **{
+                    name: getattr(self.data, name)
+                    for name in ("serial", "activities", "memory_total", "memory_free")
+                    if getattr(state, name) is None
+                },
+            )
+
         if state.activities and not self._backup_running:
             # Fora do poll: baixar .fit leva dezenas de segundos e travaria o boot.
             self._backup_running = True

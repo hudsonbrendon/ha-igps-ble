@@ -6,11 +6,7 @@ memory). This file covers the harder case: a HA restart reborns
 ``coordinator.data`` as ``None``, so the previous run's last value has to
 come back from Home Assistant's restore-state storage instead.
 
-Unlike ``jbl_charge5``, ``async_setup_entry`` here calls
-``coordinator.async_config_entry_first_refresh()`` unconditionally, which
-raises ``ConfigEntryNotReady`` when the BLE device can't be reached — so a
-full config-entry setup can't be exercised with the device offline. These
-tests instead exercise the entities directly, the same unit-level style
+These tests exercise the entities directly, the same unit-level style
 already used in ``test_coordinator.py``.
 """
 
