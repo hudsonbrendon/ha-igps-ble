@@ -1,0 +1,257 @@
+download_activity:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: "igps"
+    start:
+      example: "2025-11-01T06:38:21"
+      selector:
+        text: {}
+delete_activity:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: "igps"
+    start:
+      required: true
+      example: "2025-11-01T06:38:21"
+      selector:
+        text: {}
+factory_command:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: "igps"
+    command:
+      required: true
+      selector:
+        select:
+          options:
+            - "enter_check"
+            - "lock"
+            - "format"
+            - "low_level_format"
+            - "reset_settings"
+            - "factory_reset"
+            - "temperature_log"
+            - "voltage_log"
+            - "ant_log"
+          translation_key: "control"
+    status:
+      default: 1
+      selector:
+        number:
+          mode: "box"
+          min: 0
+          max: 255
+gps_control:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: "igps"
+    command:
+      required: true
+      selector:
+        select:
+          options:
+            - "power"
+            - "cold_start"
+            - "power_save"
+            - "gnss"
+          translation_key: "gps_command"
+    status:
+      default: 1
+      selector:
+        number:
+          mode: "box"
+          min: 0
+          max: 255
+set_gnss:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: "igps"
+    systems:
+      required: true
+      selector:
+        select:
+          options:
+            - "gps"
+            - "beidou"
+            - "glonass"
+            - "qzss"
+            - "sbas"
+            - "galileo"
+            - "imes"
+          multiple: true
+          translation_key: "gnss"
+set_gps_dynamic:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: "igps"
+    mode:
+      required: true
+      selector:
+        select:
+          options:
+            - "portable"
+            - "stationary"
+            - "pedestrian"
+            - "automotive"
+            - "sea"
+            - "airborne_1g"
+            - "airborne_2g"
+            - "airborne_4g"
+            - "wrist"
+            - "bike"
+          translation_key: "gps_dynamic"
+set_gps_position:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: "igps"
+    latitude:
+      selector:
+        number:
+          mode: "box"
+          min: -90
+          max: 90
+          step: "any"
+    longitude:
+      selector:
+        number:
+          mode: "box"
+          min: -180
+          max: 180
+          step: "any"
+set_power_save_time:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: "igps"
+    value:
+      required: true
+      selector:
+        number:
+          mode: "box"
+          min: 0
+          max: 65535
+set_sun_time:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: "igps"
+    sunrise:
+      required: true
+      selector:
+        number:
+          mode: "box"
+          min: 0
+          max: 86400
+    sunset:
+      required: true
+      selector:
+        number:
+          mode: "box"
+          min: 0
+          max: 86400
+set_filter:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: "igps"
+    filter:
+      required: true
+      selector:
+        select:
+          options:
+            - "smart_save"
+            - "speed"
+            - "cadence"
+            - "heart_rate"
+            - "gps_icon"
+            - "ant_icon"
+          translation_key: "filter"
+    enabled:
+      required: true
+      selector:
+        boolean: {}
+set_serial:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: "igps"
+    serial:
+      required: true
+      selector:
+        text: {}
+simulate_activities:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: "igps"
+    count:
+      required: true
+      selector:
+        number:
+          mode: "box"
+          min: 1
+          max: 100
+    size:
+      required: true
+      selector:
+        number:
+          mode: "box"
+          min: 1
+          max: 1000000
+send_command:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: "igps"
+    service:
+      required: true
+      selector:
+        number:
+          mode: "box"
+          min: 0
+          max: 255
+    operation:
+      required: true
+      selector:
+        number:
+          mode: "box"
+          min: 0
+          max: 255
+    fields:
+      example: "[[3, [[1, 1130913501]]]]"
+      selector:
+        object: {}
+    sub:
+      default: 255
+      selector:
+        number:
+          mode: "box"
+          min: 0
+          max: 255
+    channel:
+      default: "data"
+      selector:
+        select:
+          options:
+            - "data"
+            - "third"

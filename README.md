@@ -40,6 +40,14 @@ in automatically via `manifest.json` `requirements`.
 - 🗂️ **Stored activities** — how many rides are on the device and when the last one
   started.
 - 📍 **Last GPS position** — a `device_tracker` with the last fix the device got.
+- 💾 **Automatic `.fit` backup** — every new ride is downloaded to
+  `media/igps/<serial>/` (browsable in **Media**), plus a download service.
+- 🧹 **Maintenance** — delete one/all activities, format, low-level format, reset
+  settings, factory reset, test mode, lock, logs, unbind, firmware (DFU) mode.
+- 🛰️ **GPS control** — cold start, power, GNSS constellations, dynamic model,
+  reference position.
+- 🧪 **Raw command service** — send any `{service, operation, fields}` and get the
+  decoded reply.
 - ⚙️ **Rider & bike profile** — weight, height, age, sex, wheel circumference and
   bike weight, written to the device (the time zone is taken from Home Assistant).
 - 🛰️ **Works through ESPHome Bluetooth proxies** — it uses Home Assistant's shared
@@ -127,14 +135,41 @@ The device accepts the profile but never reports it back, so these entities show
 the last values Home Assistant wrote (`assumed_state`). Every write sends the whole
 profile plus Home Assistant's UTC offset, which sets the device clock's time zone.
 
+### Buttons
+
+Refresh now, download all activities, delete all activities, GPS cold start, reset
+settings, format memory, low-level format, factory reset, factory test mode, lock,
+temperature/voltage/ANT log, unbind from app, enter firmware update (DFU) mode.
+
+> ⚠️ Delete, format and factory reset erase data on the device and Home Assistant does
+> not ask for confirmation. `.fit` files are backed up first by the automatic backup.
+
+### Services
+
+| Service | What it does |
+|---------|--------------|
+| `igps.download_activity` | Download one (`start`) or all `.fit` files; returns the saved paths. |
+| `igps.delete_activity` | Delete the activity with the given `start`. |
+| `igps.factory_command` | `format`, `low_level_format`, `reset_settings`, `factory_reset`, `enter_check`, `lock`, `temperature_log`, `voltage_log`, `ant_log`. |
+| `igps.gps_control` | `power`, `cold_start`, `power_save`, `gnss` with a status. |
+| `igps.set_gnss` | GNSS constellations (GPS, BeiDou, GLONASS, QZSS, SBAS, Galileo, IMES). |
+| `igps.set_gps_dynamic` | Receiver dynamic model (bike, pedestrian, automotive…). |
+| `igps.set_gps_position` | Reference position (defaults to the HA location). |
+| `igps.set_power_save_time` / `set_sun_time` / `set_filter` | Raw firmware settings. |
+| `igps.set_serial` | Rewrite the serial number. |
+| `igps.simulate_activities` | Factory test: generate fake activities. |
+| `igps.send_command` | Raw protocol command, returns the decoded reply. |
+
 ## Scope
 
-Everything above was reverse engineered from the official iGPSPORT Ride Android
-app and validated on a real iGS10S — see [`docs/PROTOCOL.md`](docs/PROTOCOL.md).
-Not exposed: downloading `.fit` files, deleting activities, factory commands
-(format/reset) and display settings (`CONFIG` is answered with *unsupported* by the
-iGS10S firmware). Time sync is not available either — the clock comes from GPS.
-The live ride attributes are raw protocol values; their units are not confirmed.
+Everything was reverse engineered from the official iGPSPORT Ride Android app and
+validated on a real iGS10S where it's safe — see [`docs/PROTOCOL.md`](docs/PROTOCOL.md)
+for the frames and which commands were tested live. Destructive and factory commands
+follow the app's code but were not fired on a real device. Not available on the
+iGS10S firmware: display/page settings and time sync (`CONFIG` and `BACK/TIME` are
+answered with *unsupported*; the clock comes from GPS). Firmware flashing needs the
+`.zip` from iGPSPORT and a Nordic DFU tool after the DFU button. The live ride
+attributes are raw protocol values; their units are not confirmed.
 
 ## Credits
 

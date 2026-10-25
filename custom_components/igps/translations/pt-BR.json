@@ -89,6 +89,335 @@
           "female": "Feminino"
         }
       }
+    },
+    "button": {
+      "refresh": {
+        "name": "Atualizar agora"
+      },
+      "download_activities": {
+        "name": "Baixar todas as atividades"
+      },
+      "delete_all_activities": {
+        "name": "Apagar todas as atividades"
+      },
+      "gps_cold_start": {
+        "name": "Cold start do GPS"
+      },
+      "reset_settings": {
+        "name": "Restaurar ajustes"
+      },
+      "format": {
+        "name": "Formatar memória"
+      },
+      "low_level_format": {
+        "name": "Formatação de baixo nível"
+      },
+      "factory_reset": {
+        "name": "Reset de fábrica"
+      },
+      "enter_check": {
+        "name": "Modo de teste de fábrica"
+      },
+      "lock": {
+        "name": "Travar"
+      },
+      "temperature_log": {
+        "name": "Log de temperatura"
+      },
+      "voltage_log": {
+        "name": "Log de tensão"
+      },
+      "ant_log": {
+        "name": "Log ANT"
+      },
+      "unbond": {
+        "name": "Desvincular do app"
+      },
+      "enter_dfu": {
+        "name": "Entrar no modo de atualização (DFU)"
+      }
+    }
+  },
+  "services": {
+    "download_activity": {
+      "name": "Baixar atividade",
+      "description": "Os .fit vão para media/igps/<serial>/. Sem início, baixa todas.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Aparelho",
+          "description": "Entrada do iGS10S (opcional quando só existe uma)."
+        },
+        "start": {
+          "name": "Início",
+          "description": "Início da atividade como no atributo de atividades salvas."
+        }
+      }
+    },
+    "delete_activity": {
+      "name": "Apagar atividade",
+      "description": "Apaga uma atividade do aparelho.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Aparelho",
+          "description": "Entrada do iGS10S (opcional quando só existe uma)."
+        },
+        "start": {
+          "name": "Início",
+          "description": "Início da atividade como no atributo de atividades salvas."
+        }
+      }
+    },
+    "factory_command": {
+      "name": "Comando de fábrica",
+      "description": "FACTORY/CONTROL_SET: formatar, reset de fábrica, restaurar ajustes, travar, logs, modo teste.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Aparelho",
+          "description": "Entrada do iGS10S (opcional quando só existe uma)."
+        },
+        "command": {
+          "name": "Comando",
+          "description": ""
+        },
+        "status": {
+          "name": "Status",
+          "description": "Valor cru enviado junto (1 = liga/executa)."
+        }
+      }
+    },
+    "gps_control": {
+      "name": "Controle do GPS",
+      "description": "Liga/desliga, cold start, economia, GNSS.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Aparelho",
+          "description": "Entrada do iGS10S (opcional quando só existe uma)."
+        },
+        "command": {
+          "name": "Comando",
+          "description": ""
+        },
+        "status": {
+          "name": "Status",
+          "description": "1 = liga/executa, 0 = desliga."
+        }
+      }
+    },
+    "set_gnss": {
+      "name": "Definir sistemas GNSS",
+      "description": "Constelações usadas pelo receptor.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Aparelho",
+          "description": "Entrada do iGS10S (opcional quando só existe uma)."
+        },
+        "systems": {
+          "name": "Sistemas",
+          "description": ""
+        }
+      }
+    },
+    "set_gps_dynamic": {
+      "name": "Definir modelo dinâmico do GPS",
+      "description": "Modelo de movimento do receptor.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Aparelho",
+          "description": "Entrada do iGS10S (opcional quando só existe uma)."
+        },
+        "mode": {
+          "name": "Modo",
+          "description": ""
+        }
+      }
+    },
+    "set_gps_position": {
+      "name": "Definir posição de referência do GPS",
+      "description": "Ajuda o primeiro fix. Padrão: local do Home Assistant.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Aparelho",
+          "description": "Entrada do iGS10S (opcional quando só existe uma)."
+        },
+        "latitude": {
+          "name": "Latitude",
+          "description": ""
+        },
+        "longitude": {
+          "name": "Longitude",
+          "description": ""
+        }
+      }
+    },
+    "set_power_save_time": {
+      "name": "Definir tempo de economia de energia",
+      "description": "Valor cru do firmware.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Aparelho",
+          "description": "Entrada do iGS10S (opcional quando só existe uma)."
+        },
+        "value": {
+          "name": "Valor",
+          "description": ""
+        }
+      }
+    },
+    "set_sun_time": {
+      "name": "Definir nascer/pôr do sol",
+      "description": "Valores crus (usados no backlight automático).",
+      "fields": {
+        "config_entry_id": {
+          "name": "Aparelho",
+          "description": "Entrada do iGS10S (opcional quando só existe uma)."
+        },
+        "sunrise": {
+          "name": "Nascer do sol",
+          "description": ""
+        },
+        "sunset": {
+          "name": "Pôr do sol",
+          "description": ""
+        }
+      }
+    },
+    "set_filter": {
+      "name": "Definir filtro",
+      "description": "Filtros de dados/ícones do firmware.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Aparelho",
+          "description": "Entrada do iGS10S (opcional quando só existe uma)."
+        },
+        "filter": {
+          "name": "Filtro",
+          "description": ""
+        },
+        "enabled": {
+          "name": "Ativo",
+          "description": ""
+        }
+      }
+    },
+    "set_serial": {
+      "name": "Definir número de série",
+      "description": "Regrava o número de série do aparelho.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Aparelho",
+          "description": "Entrada do iGS10S (opcional quando só existe uma)."
+        },
+        "serial": {
+          "name": "Série",
+          "description": ""
+        }
+      }
+    },
+    "simulate_activities": {
+      "name": "Simular atividades",
+      "description": "Teste de fábrica: gera atividades .fit falsas.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Aparelho",
+          "description": "Entrada do iGS10S (opcional quando só existe uma)."
+        },
+        "count": {
+          "name": "Quantidade",
+          "description": ""
+        },
+        "size": {
+          "name": "Tamanho",
+          "description": "Bytes por arquivo."
+        }
+      }
+    },
+    "send_command": {
+      "name": "Enviar comando cru",
+      "description": "Envia {1: serviço, 2: operação, ...campos} e devolve a resposta decodificada.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Aparelho",
+          "description": "Entrada do iGS10S (opcional quando só existe uma)."
+        },
+        "service": {
+          "name": "Serviço",
+          "description": "Common.service_type_index."
+        },
+        "operation": {
+          "name": "Operação",
+          "description": ""
+        },
+        "fields": {
+          "name": "Campos",
+          "description": "Campos protobuf extras como [[número, valor], ...]; submensagens como listas."
+        },
+        "sub": {
+          "name": "Sub-serviço",
+          "description": "Byte 2 do header (255 = nenhum)."
+        },
+        "channel": {
+          "name": "Canal",
+          "description": "data = NUS 1, third = NUS 3."
+        }
+      }
+    }
+  },
+  "selector": {
+    "control": {
+      "options": {
+        "enter_check": "Modo de teste de fábrica",
+        "lock": "Travar",
+        "format": "Formatar memória",
+        "low_level_format": "Formatação de baixo nível",
+        "reset_settings": "Restaurar ajustes",
+        "factory_reset": "Reset de fábrica",
+        "temperature_log": "Log de temperatura",
+        "voltage_log": "Log de tensão",
+        "ant_log": "Log ANT"
+      }
+    },
+    "gps_command": {
+      "options": {
+        "power": "Energia",
+        "cold_start": "Cold start",
+        "power_save": "Economia",
+        "gnss": "GNSS"
+      }
+    },
+    "gnss": {
+      "options": {
+        "gps": "GPS",
+        "beidou": "BeiDou",
+        "glonass": "GLONASS",
+        "qzss": "QZSS",
+        "sbas": "SBAS",
+        "galileo": "Galileo",
+        "imes": "IMES"
+      }
+    },
+    "gps_dynamic": {
+      "options": {
+        "portable": "Portátil",
+        "stationary": "Parado",
+        "pedestrian": "Pedestre",
+        "automotive": "Automotivo",
+        "sea": "Mar",
+        "airborne_1g": "Aéreo <1g",
+        "airborne_2g": "Aéreo <2g",
+        "airborne_4g": "Aéreo <4g",
+        "wrist": "Pulso",
+        "bike": "Bike"
+      }
+    },
+    "filter": {
+      "options": {
+        "smart_save": "Gravação inteligente",
+        "speed": "Velocidade",
+        "cadence": "Cadência",
+        "heart_rate": "Frequência cardíaca",
+        "gps_icon": "Ícone GPS",
+        "ant_icon": "Ícone ANT"
+      }
     }
   }
 }

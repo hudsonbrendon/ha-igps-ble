@@ -77,7 +77,5 @@ class IGPSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required("address"): vol.In(self._discovered)}
-            ),
+            data_schema=vol.Schema({vol.Required("address"): vol.In(self._discovered)}),
         )

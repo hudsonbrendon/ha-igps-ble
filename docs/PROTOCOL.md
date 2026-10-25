@@ -100,9 +100,39 @@ Epoch FIT = 1989-12-31 00:00; o aparelho guarda horário local nessa base.
 - BACK/TIME (3/6, `timeCalibration`): status 6. FACTORY RTC_SET (12) dá ACK 0 mas o
   relógio não muda — a hora vem do GPS + fuso do perfil.
 
-## Não implementado de propósito
+## Download de `.fit` (CYCLING_DATA/FILE_GET, ch3)
 
-- Download de `.fit` (CYCLING_DATA FILE_GET) — dá para fazer, fica para depois.
-- CYCLING_DATA FILE_DEL/ALL_DEL, FACTORY CONTROL (format, factory reset), SN_SET:
-  destrutivos.
-- BACK (clima, pressão, efemérides AGPS) — telas que o iGS10S (LCD segmentado) não tem.
+Pedido `{1: 6, 2: 3, 3: {1: id}}` (id = timestamp FIT cru da lista). O aparelho manda
+pedaços `cycling_data_msg {3: {1: id}, 4: file_content}` (4 KB pelo Mac, 1 KB pelo
+rádio do HA), cada um seguido de header op 4 (FILE_SEND). O cliente confere
+`len`/`crc8` do pedaço e responde ACK `02 06 ff ff 04 ff ff STATUS` — 0 = manda o
+próximo, 1 = reenvia. `header[10] == 3` marca o último pedaço. O app confere o tamanho
+total com o da lista: o aparelho às vezes encerra cedo (pedaço vazio com fim = 3) e aí
+tem que baixar de novo. Validado: os 3 `.fit` do aparelho saem idênticos (CRC FIT ok).
+
+Escritas como *write with response*: pelo proxy BLE do HA, ACK sem resposta se perde
+e o aparelho aborta a transferência.
+
+## Comandos de manutenção (implementados, seguindo o app)
+
+| Comando | Frame | Testado ao vivo |
+|---------|-------|-----------------|
+| Apagar atividade | CYCLING_DATA op 5 `{3: {1: id}}` ch3 | id inexistente → ACK 0 (as reais não foram apagadas) |
+| Apagar todas | CYCLING_DATA op 6 ch3 | não |
+| Formatar / baixo nível / restaurar ajustes / reset de fábrica | FACTORY op 23 `{8: {1: 16/17/18/19, 2: 1}}` | não |
+| Modo teste, travar, logs temp/tensão/ANT | FACTORY op 23 `{8: {1: 1/2/32/33/34, 2: 1}}` | não |
+| GPS liga/desliga, cold start, economia, GNSS | FACTORY op 16 `{14: {1: tipo, 2: status}}` | não |
+| Constelações (bitmask) | FACTORY op 18 `{15: {1: mask}}` | não |
+| Modelo dinâmico | FACTORY op 20 `{16: {1: modo}}` | GET → ACK 0 |
+| Posição de referência | FACTORY op 8 `{9: {1: lat, 2: lon}}` (double) | não |
+| Economia de energia, nascer/pôr do sol, filtros | FACTORY op 11 / 9 / 14 | não |
+| Simular atividades | FACTORY op 7 `{7: {1: n, 2: bytes}}` | ACK 0, não criou nada fora do modo teste |
+| Regravar serial | FACTORY op 3 `{3: {1: sn}}` | não |
+| Desvincular do app | BLE op 4 | não |
+| Modo DFU | FIRMWARE op 5 (BLE_UPDATE) → bootloader Nordic | não |
+
+Os comandos de fábrica não têm tela no app (bancada), então nomes e valores vêm dos
+enums do protobuf. Os GETs de filtro/GNSS/sol/RTC não devolvem dados neste firmware.
+Firmware: o iGS10S atualiza por Nordic DFU (`.zip` da nuvem iGPSPORT, gravado com
+nRF Connect/nrfutil depois do modo DFU); o reboot (MCU_UPDATE) só existe na gen 4.
+

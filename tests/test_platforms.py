@@ -31,11 +31,12 @@ STATE = IGPSDeviceState(
     latitude=-5.8,
     longitude=-35.2,
     ride={"cadence": 85},
-    activities=(Activity(datetime(2025, 11, 1, 6, 38), 22068),),
+    activities=(Activity(1130913480, datetime(2025, 11, 1, 6, 38), 22068),),
 )
 
 
-async def test_entities_and_profile_write(hass: HomeAssistant):
+async def test_entities_and_profile_write(hass: HomeAssistant, tmp_path):
+    hass.config.media_dirs = {"local": str(tmp_path)}
     entry = MockConfigEntry(domain=DOMAIN, data={"address": ADDRESS}, unique_id=ADDRESS)
     entry.add_to_hass(hass)
     client = MagicMock(disconnect=AsyncMock())
@@ -58,10 +59,15 @@ async def test_entities_and_profile_write(hass: HomeAssistant):
         ),
         patch("custom_components.igps.coordinator.IGPSSession") as session,
         patch(
+            "custom_components.igps.coordinator.download_activity",
+            AsyncMock(return_value=b"\x0e\x10.FIT"),
+        ) as download,
+        patch(
             "custom_components.igps.coordinator.set_profile", AsyncMock()
         ) as set_profile,
     ):
         session.return_value.start = AsyncMock()
+        session.return_value.simple = AsyncMock(return_value={})
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -92,3 +98,23 @@ async def test_entities_and_profile_write(hass: HomeAssistant):
         assert profile.wheel_mm == 2096
         assert entry.options["profile"]["wheel_mm"] == 2096
         assert hass.states.get("number.igs10s_wheel_circumference").state == "2096"
+
+        # Backup automático do .fit novo na pasta de mídia.
+        fit = tmp_path / "igps" / "799940" / "2025-11-01-063800.fit"
+        assert fit.read_bytes() == b"\x0e\x10.FIT"
+        assert download.await_count == 1
+
+        # Botão destrutivo chega no aparelho com o frame do app.
+        await hass.services.async_call(
+            "button",
+            "press",
+            {"entity_id": "button.igs10s_delete_all_activities"},
+            blocking=True,
+        )
+        args, kwargs = session.return_value.simple.await_args
+        assert args[:2] == (6, 6) and kwargs["channel"].endswith("dcca7e")
+
+        reply = await hass.services.async_call(
+            DOMAIN, "download_activity", {}, blocking=True, return_response=True
+        )
+        assert reply == {"files": [str(fit)]}
