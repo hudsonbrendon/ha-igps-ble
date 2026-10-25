@@ -333,7 +333,7 @@
     },
     "send_command": {
       "name": "Enviar comando cru",
-      "description": "Envia {1: serviço, 2: operação, ...campos} e devolve a resposta decodificada.",
+      "description": "Envia uma mensagem com o serviço, a operação e os campos extras informados, e devolve a resposta decodificada.",
       "fields": {
         "config_entry_id": {
           "name": "Aparelho",

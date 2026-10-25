@@ -333,7 +333,7 @@
     },
     "send_command": {
       "name": "Send raw command",
-      "description": "Sends {1: service, 2: operation, ...fields} and returns the decoded reply.",
+      "description": "Sends a message with the given service, operation and extra fields, and returns the decoded reply.",
       "fields": {
         "config_entry_id": {
           "name": "Device",
