@@ -116,18 +116,18 @@ class IGPSCoordinator(DataUpdateCoordinator[IGPSDeviceState]):
                 return self.data
             raise UpdateFailed(f"iGS10S {self.address} fora de alcance")
 
-        async with self._lock:
-            client, session = await self._connect()
-            try:
-                state = await read_state(
-                    client,
+        try:
+            state = await self.async_run(
+                lambda s: read_state(
+                    s.client,
                     self.address,
                     service_info.name,
                     service_info.rssi,
-                    session=session,
+                    session=s,
                 )
-            finally:
-                await client.disconnect()
+            )
+        except HomeAssistantError as err:
+            raise UpdateFailed(str(err)) from err
 
         if self.data is not None:
             # Consulta que estourou o tempo neste poll: mantém o último valor.
