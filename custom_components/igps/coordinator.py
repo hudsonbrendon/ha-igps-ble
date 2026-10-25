@@ -215,4 +215,5 @@ def _write(path: Path, data: bytes) -> None:
         dir=path.parent, suffix=".part", delete=False
     ) as f:
         f.write(data)
+    Path(f.name).chmod(0o644)  # tempfile cria 600
     Path(f.name).replace(path)
