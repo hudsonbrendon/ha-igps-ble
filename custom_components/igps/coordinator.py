@@ -7,6 +7,7 @@ import logging
 import tempfile
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, replace
+from datetime import timedelta
 from pathlib import Path
 from typing import TypeVar
 
@@ -44,7 +45,7 @@ class IGPSCoordinator(DataUpdateCoordinator[IGPSDeviceState]):
             _LOGGER,
             config_entry=entry,
             name=f"{DOMAIN}-{address}",
-            update_interval=UPDATE_INTERVAL,
+            update_interval=UPDATE_INTERVAL,  # o primeiro poll aplica o salvo
         )
         self.address = address
         # Uma conexão por vez: poll e escrita de perfil disputam o mesmo rádio.
@@ -56,6 +57,21 @@ class IGPSCoordinator(DataUpdateCoordinator[IGPSDeviceState]):
         return bluetooth.async_last_service_info(
             self.hass, self.address, connectable=True
         )
+
+    @property
+    def idle_interval(self) -> timedelta:
+        """Intervalo entre leituras com o aparelho parado (ajustável no HA)."""
+        minutes = self.config_entry.options.get("scan_interval_min")
+        return timedelta(minutes=minutes) if minutes else UPDATE_INTERVAL
+
+    def set_idle_interval(self, minutes: int) -> None:
+        self.hass.config_entries.async_update_entry(
+            self.config_entry,
+            options={**self.config_entry.options, "scan_interval_min": minutes},
+        )
+        if self.update_interval != RIDING_UPDATE_INTERVAL:
+            self.update_interval = self.idle_interval
+        self.async_update_listeners()
 
     @property
     def profile(self) -> UserProfile:
@@ -151,7 +167,7 @@ class IGPSCoordinator(DataUpdateCoordinator[IGPSDeviceState]):
         self.update_interval = (
             RIDING_UPDATE_INTERVAL
             if state.cycling_status in ("recording", "paused")
-            else UPDATE_INTERVAL
+            else self.idle_interval
         )
         return state
 

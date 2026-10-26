@@ -79,6 +79,9 @@
       },
       "bike_weight": {
         "name": "Peso da bike"
+      },
+      "scan_interval": {
+        "name": "Intervalo de leitura"
       }
     },
     "select": {

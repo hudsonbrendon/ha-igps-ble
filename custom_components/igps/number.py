@@ -86,7 +86,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator = entry.runtime_data
-    async_add_entities(IGPSNumber(coordinator, desc) for desc in NUMBERS)
+    async_add_entities(
+        [
+            *(IGPSNumber(coordinator, desc) for desc in NUMBERS),
+            IGPSInterval(coordinator),
+        ]
+    )
 
 
 class IGPSNumber(IGPSEntity, NumberEntity):
@@ -109,3 +114,25 @@ class IGPSNumber(IGPSEntity, NumberEntity):
         await self.coordinator.async_set_profile(
             **{field: value if field.endswith("_kg") else int(value)}
         )
+
+
+class IGPSInterval(IGPSEntity, NumberEntity):
+    """Minutos entre leituras com o aparelho parado (cada leitura gasta bateria)."""
+
+    _attr_translation_key = "scan_interval"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_mode = NumberMode.BOX
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_native_min_value = 1
+    _attr_native_max_value = 1440
+    _attr_native_step = 1
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "scan_interval")
+
+    @property
+    def native_value(self) -> float:
+        return self.coordinator.idle_interval.total_seconds() / 60
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.coordinator.set_idle_interval(int(value))

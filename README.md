@@ -130,6 +130,7 @@ Serial number, hardware revision and firmware are also on the device page.
 | `number.<name>_wheel_circumference` | Wheel circumference in mm (speed from a wheel sensor). |
 | `number.<name>_bike_weight` | Bike weight (kg). |
 | `select.<name>_rider_sex` | Male / female. |
+| `number.<name>_read_interval` | Minutes between reads while the device is idle (default 10). Each read wakes the device's radio, so a longer interval saves battery; while recording it always reads every 30 s. |
 
 The device accepts the profile but never reports it back, so these entities show
 the last values Home Assistant wrote (`assumed_state`). Every write sends the whole

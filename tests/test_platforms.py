@@ -118,3 +118,14 @@ async def test_entities_and_profile_write(hass: HomeAssistant, tmp_path):
             DOMAIN, "download_activity", {}, blocking=True, return_response=True
         )
         assert reply == {"files": [str(fit)]}
+
+        # Intervalo de leitura ajustável (vale quando não está pedalando).
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {"entity_id": "number.igs10s_read_interval", "value": 60},
+            blocking=True,
+        )
+        assert entry.options["scan_interval_min"] == 60
+        assert entry.runtime_data.idle_interval.total_seconds() == 3600
+        assert hass.states.get("number.igs10s_read_interval").state == "60.0"
