@@ -117,7 +117,7 @@ e o aparelho aborta a transferência.
 
 | Comando | Frame | Testado ao vivo |
 |---------|-------|-----------------|
-| Apagar atividade | CYCLING_DATA op 5 `{3: {1: id}}` ch3 | id inexistente → ACK 0 (as reais não foram apagadas) |
+| Apagar atividade | CYCLING_DATA op 5 `{3: {1: id}}` ch3 | ✅ 26/10: apagou só a atividade alvo (as outras ficaram); id inexistente → ACK 0 sem efeito |
 | Apagar todas | CYCLING_DATA op 6 ch3 | não |
 | Formatar / baixo nível / restaurar ajustes / reset de fábrica | FACTORY op 23 `{8: {1: 16/17/18/19, 2: 1}}` | não |
 | Modo teste, travar, logs temp/tensão/ANT | FACTORY op 23 `{8: {1: 1/2/32/33/34, 2: 1}}` | não |
