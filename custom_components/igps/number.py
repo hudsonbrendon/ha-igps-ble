@@ -131,6 +131,10 @@ class IGPSInterval(IGPSEntity, NumberEntity):
         super().__init__(coordinator, "scan_interval")
 
     @property
+    def available(self) -> bool:
+        return True  # ajuste do HA, não depende do aparelho estar ligado
+
+    @property
     def native_value(self) -> float:
         return self.coordinator.idle_interval.total_seconds() / 60
 
