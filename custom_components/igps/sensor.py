@@ -21,12 +21,14 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from igps_ble.models import IGPSDeviceState
 
 from . import IGPSConfigEntry
 from .entity import IGPSEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -163,7 +165,7 @@ SENSORS: tuple[IGPSSensorDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IGPSConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     coordinator = entry.runtime_data
     async_add_entities(IGPSSensor(coordinator, desc) for desc in SENSORS)

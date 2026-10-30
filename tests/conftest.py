@@ -1,7 +1,7 @@
 """Fixtures de teste da integração."""
 
-import pytest
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+import pytest
 
 pytest_plugins = ["pytest_homeassistant_custom_component"]
 
