@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 import asyncio
-import logging
-import tempfile
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, replace
 from datetime import timedelta
+import logging
 from pathlib import Path
+import tempfile
 from typing import TypeVar
 
 from bleak_retry_connector import BleakClientWithServiceCache, establish_connection
-from habluetooth import BluetoothServiceInfoBleak
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -176,9 +176,11 @@ class IGPSCoordinator(DataUpdateCoordinator[IGPSDeviceState]):
         try:
             folder = self.fit_dir(state.serial)
             have = await self.hass.async_add_executor_job(
-                lambda: {f.name: f.stat().st_size for f in folder.glob("*.fit")}
-                if folder.exists()
-                else {}
+                lambda: (
+                    {f.name: f.stat().st_size for f in folder.glob("*.fit")}
+                    if folder.exists()
+                    else {}
+                )
             )
             for activity in state.activities or ():
                 # Tamanho diferente = download anterior incompleto: baixa de novo.

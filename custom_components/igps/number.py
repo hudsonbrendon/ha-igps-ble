@@ -16,10 +16,12 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory, UnitOfLength, UnitOfMass, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IGPSConfigEntry
 from .entity import IGPSEntity
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -83,7 +85,7 @@ NUMBERS: tuple[IGPSNumberDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IGPSConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     coordinator = entry.runtime_data
     async_add_entities(

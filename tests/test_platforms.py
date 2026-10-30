@@ -9,6 +9,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.igps.const import DOMAIN
 from custom_components.igps.coordinator import IGPSCoordinator
+from custom_components.igps.diagnostics import async_get_config_entry_diagnostics
 
 ADDRESS = "AA:BB:CC:DD:EE:FF"
 
@@ -87,6 +88,11 @@ async def test_entities_and_profile_write(hass: HomeAssistant, tmp_path):
         )
         # Pedalando => poll rápido.
         assert entry.runtime_data.update_interval.total_seconds() == 30
+
+        diag = await async_get_config_entry_diagnostics(hass, entry)
+        assert diag["entry"]["data"]["address"] == "**REDACTED**"
+        assert diag["data"]["serial"] == "**REDACTED**"
+        assert diag["data"]["battery_level"] == 51
 
         await hass.services.async_call(
             "number",

@@ -3,8 +3,24 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py314"
 line-length = 88
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
+select = ["E", "F", "I", "UP", "B", "D", "ANN", "ASYNC", "RUF"]
+ignore = [
+  "D203", "D213", "ANN401", "RUF012", "E501",
+  # Missing docstrings/annotations on ~50 existing sites; fix incrementally.
+  "D101", "D102", "D103", "D107", "ANN001", "ANN003", "ANN202",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+combine-as-imports = true
+known-first-party = ["custom_components.igps"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "ANN", "RUF", "ASYNC"]

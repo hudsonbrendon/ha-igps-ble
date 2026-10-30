@@ -12,13 +12,14 @@ from dataclasses import dataclass
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from igps_ble import IGPSSession
-from igps_ble import client as igps
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from igps_ble import IGPSSession, client as igps
 
 from . import IGPSConfigEntry
 from .coordinator import IGPSCoordinator
 from .entity import IGPSEntity
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -94,7 +95,7 @@ BUTTONS: tuple[IGPSButtonDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IGPSConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     coordinator = entry.runtime_data
     async_add_entities(IGPSButton(coordinator, desc) for desc in BUTTONS)

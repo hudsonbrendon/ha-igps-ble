@@ -1,7 +1,7 @@
-homeassistant>=2024.6.0
-pytest-homeassistant-custom-component
-python-igps-ble>=0.3.4
-bleak-retry-connector>=3.5.0
+pytest-homeassistant-custom-component==0.13.375
+ruff
+python-igps-ble==0.3.4
+bleak-retry-connector
 
 # Runtime deps of the HA bluetooth/usb components (installed by HA at runtime,
 # needed explicitly for the test harness on macOS).
@@ -12,6 +12,7 @@ bluetooth-data-tools
 bleak
 dbus-fast
 pyserial
+serialx
 # Linux-only: HA's `usb` component (pulled in by the bluetooth stack) imports
 # pyudev on Linux. Needed so the CI test harness can set up bluetooth_adapters.
 pyudev; sys_platform == "linux"

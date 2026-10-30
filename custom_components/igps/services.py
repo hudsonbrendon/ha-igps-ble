@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import voluptuous as vol
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -11,8 +10,8 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from igps_ble import client as igps
-from igps_ble import protocol as p
+from igps_ble import client as igps, protocol as p
+import voluptuous as vol
 
 from .const import DOMAIN
 from .coordinator import IGPSCoordinator
