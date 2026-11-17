@@ -10,7 +10,6 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-
 from igps_ble.scanner import is_igps_device
 
 from .const import DOMAIN
