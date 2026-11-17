@@ -6,6 +6,8 @@ bleak-retry-connector>=3.5.0
 # Runtime deps of the HA bluetooth/usb components (installed by HA at runtime,
 # needed explicitly for the test harness on macOS).
 aiousbwatcher
+serialx
+bluetooth-auto-recovery
 habluetooth
 bluetooth-adapters
 bluetooth-data-tools
